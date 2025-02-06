@@ -1,0 +1,7 @@
+# SQLite database files
+*.db
+
+# Python cache files (good practice to ignore these too)
+__pycache__/
+*.py[cod]
+*$py.class 
