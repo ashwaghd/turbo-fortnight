@@ -15,7 +15,7 @@ CREATE TABLE users (
 -- Create accounts table first since posts will reference it
 CREATE TABLE accounts (
     username VARCHAR(50) NOT NULL UNIQUE PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE ,
+    email VARCHAR(255) NOT NULL ,
     acct_type VARCHAR(50) NOT NULL,
     FOREIGN KEY (email) REFERENCES users(email)
 );
