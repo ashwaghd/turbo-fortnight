@@ -6,13 +6,11 @@ DROP TABLE IF EXISTS likes_dislikes;
 DROP TABLE IF EXISTS followers;
 DROP TABLE IF EXISTS saved;
 
--- Create users table first since accounts will reference it
 CREATE TABLE users (
     email VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY,
     birthday DATE NOT NULL
 );
 
--- Create accounts table first since posts will reference it
 CREATE TABLE accounts (
     username VARCHAR(50) NOT NULL UNIQUE PRIMARY KEY,
     email VARCHAR(255) NOT NULL ,
@@ -20,12 +18,11 @@ CREATE TABLE accounts (
     FOREIGN KEY (email) REFERENCES users(email)
 );
 
--- Create posts table with foreign key reference to accounts
 CREATE TABLE posts (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (username) REFERENCES accounts(username) ON DELETE CASCADE
 );
 
