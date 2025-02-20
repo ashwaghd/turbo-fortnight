@@ -106,3 +106,97 @@ def get_saved_posts(db, username):
         (username,)
     )
     return cursor.fetchall()
+
+def get_biggest_hater(db):
+    cursor = db.execute("""
+        SELECT 
+            username,
+            COUNT(*) as dislike_count
+        FROM likes_dislikes 
+        WHERE liked = 0
+        GROUP BY username
+        ORDER BY dislike_count DESC
+        LIMIT 1
+    """)
+    result = cursor.fetchone()
+    if result:
+        # Add total posts count for context
+        cursor = db.execute("""
+            SELECT COUNT(*) as total_reactions
+            FROM likes_dislikes
+            WHERE username = ?
+        """, (result['username'],))
+        total = cursor.fetchone()
+        return {
+            'username': result['username'],
+            'dislike_count': result['dislike_count'],
+            'total_reactions': total['total_reactions'],
+            'dislike_percentage': round((result['dislike_count'] / total['total_reactions']) * 100, 2)
+        }
+    return None
+
+def get_best_match(db):
+    cursor = db.execute("""
+        WITH shared_interests AS (
+            -- Count shared likes
+            SELECT 
+                a.username as user1,
+                b.username as user2,
+                COUNT(*) as shared_count
+            FROM likes_dislikes a
+            JOIN likes_dislikes b ON a.post_id = b.post_id
+            WHERE a.username < b.username  -- Avoid self-pairs and duplicates
+                AND a.liked = 1 AND b.liked = 1
+            GROUP BY a.username, b.username
+            
+            UNION ALL
+            
+            -- Count shared saves
+            SELECT 
+                a.username as user1,
+                b.username as user2,
+                COUNT(*) as shared_count
+            FROM saved a
+            JOIN saved b ON a.post_id = b.post_id
+            WHERE a.username < b.username  -- Avoid self-pairs and duplicates
+            GROUP BY a.username, b.username
+        )
+        SELECT 
+            user1,
+            user2,
+            SUM(shared_count) as total_shared,
+            COUNT(*) as interaction_types
+        FROM shared_interests
+        GROUP BY user1, user2
+        ORDER BY total_shared DESC, interaction_types DESC
+        LIMIT 1
+    """)
+    result = cursor.fetchone()
+    
+    if result:
+        # Get additional details about their shared content
+        cursor = db.execute("""
+            SELECT COUNT(*) as shared_likes
+            FROM likes_dislikes a
+            JOIN likes_dislikes b ON a.post_id = b.post_id
+            WHERE a.username = ? AND b.username = ?
+                AND a.liked = 1 AND b.liked = 1
+        """, (result['user1'], result['user2']))
+        shared_likes = cursor.fetchone()['shared_likes']
+        
+        cursor = db.execute("""
+            SELECT COUNT(*) as shared_saves
+            FROM saved a
+            JOIN saved b ON a.post_id = b.post_id
+            WHERE a.username = ? AND b.username = ?
+        """, (result['user1'], result['user2']))
+        shared_saves = cursor.fetchone()['shared_saves']
+        
+        return {
+            'user1': result['user1'],
+            'user2': result['user2'],
+            'shared_likes': shared_likes,
+            'shared_saves': shared_saves,
+            'total_shared': result['total_shared']
+        }
+    return None
