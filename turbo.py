@@ -166,6 +166,27 @@ def view_saved(db, args):
     else:
         print("Username is required to view saved posts")
 
+def view_biggest_hater(db, args):
+    hater = get_biggest_hater(db)
+    if hater:
+        print(f"Biggest Hater: {hater['username']}")
+        print(f"Total Dislikes: {hater['dislike_count']}")
+        print(f"Total Reactions: {hater['total_reactions']}")
+        print(f"Dislike Percentage: {hater['dislike_percentage']}%")
+    else:
+        print("No dislikes found in the system")
+
+def view_matchmaker(db, args):
+    match = get_best_match(db)
+    if match:
+        print("\nBest Match Found!")
+        print(f"Users: {match['user1']} and {match['user2']}")
+        print(f"Shared Likes: {match['shared_likes']}")
+        print(f"Shared Saved Posts: {match['shared_saves']}")
+        print(f"Total Shared Interests: {match['total_shared']}")
+    else:
+        print("No matching pairs found with shared interests")
+
 def parse_args():
     """
     Parse command line arguments for the database tool.
@@ -190,7 +211,8 @@ def parse_args():
     parser.add_argument(
         '--record',
         type=str,
-        choices=['user', 'account', 'post', 'like', 'follow', 'feed', 'followers', 'following', 'saved'],
+        choices=['user', 'account', 'post', 'like', 'follow', 'feed', 
+                'followers', 'following', 'saved', 'biggest_hater', 'matchmaker'],
         required=True,
         help="The type of record to inspect or modify."
     )
@@ -241,6 +263,10 @@ def main():
             view_following(db, args)
         elif args.record == 'saved':
             view_saved(db, args)
+        elif args.record == 'biggest_hater':
+            view_biggest_hater(db, args)
+        elif args.record == 'matchmaker':
+            view_matchmaker(db, args)
         else:
             print(f"Viewing for record type '{args.record}' is not supported yet.")
     
